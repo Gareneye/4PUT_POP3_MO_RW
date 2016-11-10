@@ -1,10 +1,8 @@
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
+#include "Server.h"
 
-#include "Network.h"
 
-int main()
+
+Server::Server()
 {
 	// Network
 	Network network;
@@ -12,9 +10,27 @@ int main()
 	network.bindSocket();
 	network.listenSocket();
 
-	SOCKET client = network.acceptSocket();
+	// MOTD
+	std::cout << MOTD;
+
+	// Commands list
+	std::map<std::string, Command> commands;
+	commands.insert(std::pair<std::string, Command>("user", this->userCommand));
+
+	// Command
+	std::string command;
+	//getline(std::cin, command);
+	//std::vector<std::string> tokens = Utility::tokenizer("1Token 2Token 3Token");
+
+	//SOCKET client = network.acceptSocket();
+}
 
 
-	system("PAUSE");
-	return 0;
+Server::~Server()
+{
+}
+
+bool Server::userCommand(unsigned int, std::string[])
+{
+	return false;
 }
