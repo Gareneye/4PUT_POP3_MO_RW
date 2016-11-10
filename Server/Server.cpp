@@ -5,7 +5,6 @@
 Server::Server()
 {
 	// Network
-	Network network;
 	network.createSocket();
 	network.bindSocket();
 	network.listenSocket();
@@ -13,14 +12,20 @@ Server::Server()
 	// MOTD
 	std::cout << MOTD;
 
-	// Commands list
+	// Commands
 	std::map<std::string, Command> commands;
-	commands.insert(std::pair<std::string, Command>("user", this->userCommand));
+	commands.insert( { "/stat", &Server::statCmd } );
 
 	// Command
 	std::string command;
-	//getline(std::cin, command);
-	//std::vector<std::string> tokens = Utility::tokenizer("1Token 2Token 3Token");
+	getline(std::cin, command);
+
+	std::vector<std::string> tokens = Utility::tokenizer(command);
+	Command cmd = commands[tokens[0]];
+
+	if (cmd) {
+		cmd(this, tokens);
+	}
 
 	//SOCKET client = network.acceptSocket();
 }
@@ -30,7 +35,7 @@ Server::~Server()
 {
 }
 
-bool Server::userCommand(unsigned int, std::string[])
+void Server::statCmd(Server *, std::vector<std::string>)
 {
-	return false;
+	std::cout << MOTD << std::endl;
 }
