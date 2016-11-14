@@ -6,10 +6,10 @@
 #include <string>
 #include <iostream>
 
-#include "Network.h"
+#include "NetworkClient.h"
 #include "Utility.h"
 
-#define MOTD "== Welcome in POP3 Client ==\nClient is running\nType /help for more info\n\n"
+#define MOTD "== Welcome in POP3 Client ==\nClient is running\nType /help for more info\n"
 
 class Client;
 
@@ -21,10 +21,15 @@ public:
 	Client();
 	virtual ~Client();
 
+	void disable();
+
 	static void userCmd(Client*, std::vector<std::string>);
 	static void helpCmd(Client*, std::vector<std::string>);
+	static void quitCmd(Client*, std::vector<std::string>);
+	static void connectCmd(Client*, std::vector<std::string>);
 
 private:
-	Network network;
+	bool isWorking;
+	NetworkClient network;
 };
 

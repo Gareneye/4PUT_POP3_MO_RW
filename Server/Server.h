@@ -6,10 +6,10 @@
 #include <string>
 #include <iostream>
 
-#include "Network.h"
+#include "NetworkServer.h"
 #include "Utility.h"
 
-#define MOTD "== Welcome in POP3 Server ==\nServer is running on 110\n\n[Type \help for more info]\n"
+#define MOTD "== Welcome in POP3 Server ==\nServer is running on port 110\n\n"
 
 class Server;
 
@@ -22,9 +22,9 @@ public:
 	virtual ~Server();
 
 
-	static void statCmd(Server*, std::vector<std::string>);
+	//static void statCmd(Server*, std::vector<std::string>);
 
 private:
-	Network network;
+	NetworkServer network;
 };
 

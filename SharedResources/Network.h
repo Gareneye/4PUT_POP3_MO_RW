@@ -6,6 +6,7 @@
 #include <exception>
 #include <string>
 
+#define DEFAULT_BUFLEN 512
 #define POP3_PORT "110"
 
 typedef std::exception NetworkException;
@@ -16,16 +17,11 @@ public:
 	Network();
 	virtual ~Network();
 
-	void createSocket();
-	void bindSocket();
-	void listenSocket();
-	SOCKET acceptSocket();
-
-private:
+protected:
 	WSADATA wsaData;
-	addrinfo *addrInfo;
-	SOCKET ListenSocket;
+	addrinfo *result = NULL, *ptr = NULL, hints;
 
-	void checkLocalAddress();
+	bool sendData(SOCKET, char*);
+	char* recData(SOCKET);
 };
 

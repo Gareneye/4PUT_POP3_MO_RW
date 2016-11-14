@@ -4,15 +4,11 @@
 
 Server::Server()
 {
-	// Network
-	network.createSocket();
-	network.bindSocket();
-	network.listenSocket();
-
 	// MOTD
 	std::cout << MOTD;
 
 	// Commands
+	/*
 	std::map<std::string, Command> commands;
 	commands.insert( { "/stat", &Server::statCmd } );
 
@@ -26,8 +22,12 @@ Server::Server()
 	if (cmd) {
 		cmd(this, tokens);
 	}
+	*/
 
-	//SOCKET client = network.acceptSocket();
+	// Waiting for client
+	std::cout << "Waiting for client..." << std::endl;
+	network.acceptClient();
+	std::cout << "Client connected!" << std::endl;
 }
 
 
@@ -35,7 +35,9 @@ Server::~Server()
 {
 }
 
+/*
 void Server::statCmd(Server *, std::vector<std::string>)
 {
 	std::cout << MOTD << std::endl;
 }
+*/
