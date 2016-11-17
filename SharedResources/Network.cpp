@@ -18,46 +18,52 @@ Network::~Network()
 	WSACleanup();
 }
 
-bool Network::sendData(SOCKET socket, char * sendbuf)
+bool Network::sendData(SOCKET socket, char* sendbuf)
 {
-	int iResult = send(socket, sendbuf, (int)strlen(sendbuf), 0);
+	std::string buffor = sendbuf;
+	buffor.resize(DEFAULT_BUFLEN);
+
+	int iResult = send(socket, buffor.c_str(), DEFAULT_BUFLEN, 0);
 
 	if (iResult == SOCKET_ERROR) {
-		throw NetworkException("send failed with error");
+		//throw NetworkException("send failed with error");
+		printf("send failed with error: %d\n", WSAGetLastError());
 
 		closesocket(socket);
 		WSACleanup();
 		return false;
 	}
 
-	WSACleanup();
-
 	return true;
 }
 
-char* Network::recData(SOCKET socket)
+bool Network::recData(SOCKET socket, std::string& buffor)
 {
 	int iResult;
 	char recvbuf[DEFAULT_BUFLEN];
 
-	do {
-		iResult = recv(socket, recvbuf, DEFAULT_BUFLEN, 0);
+	iResult = recv(socket, recvbuf, DEFAULT_BUFLEN, 0);
 
-		if (iResult > 0)
-		{}
-		else if (iResult == 0)
-		{
-			throw NetworkException("Connection closed");
-		}
-		else
-		{
-			throw NetworkException("recv failed with error");
-		}
+	if (iResult > 0)
+	{
+		// success
+		buffor = recvbuf;
+		return true;
+	}
+	else if (iResult == 0)
+	{
+		// connection closeing
+		printf("Connection closing...\n");
+		return false;
+	}
+	else
+	{
+		printf("recv failed with error: %d\n", WSAGetLastError());
 
-	} while (iResult > 0);
-
-	WSACleanup();
-
-	return recvbuf;
+		// error
+		closesocket(socket);
+		WSACleanup();
+		return false;
+	}
 }
 

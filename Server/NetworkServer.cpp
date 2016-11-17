@@ -25,8 +25,6 @@ void NetworkServer::acceptClient()
 	}
 }
 
-
-
 void NetworkServer::createSocket()
 {
 	// Create Socket
@@ -85,7 +83,7 @@ bool NetworkServer::send(char * data)
 	return sendData(ClientSocket, data);
 }
 
-char * NetworkServer::rec()
+bool NetworkServer::rec(std::string& buffor)
 {
-	return recData(ClientSocket);
+	return recData(ClientSocket, buffor);
 }

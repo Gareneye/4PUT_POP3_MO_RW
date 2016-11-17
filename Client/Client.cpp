@@ -13,6 +13,7 @@ Client::Client()
 	// Commands
 	std::map<std::string, Command> commands;
 	commands.insert({ "/connect", &Client::connectCmd });
+	commands.insert({ "/ping", &Client::pingCmd });
 	commands.insert({ "/help", &Client::helpCmd });
 	commands.insert({ "/user", &Client::userCmd });
 	commands.insert({ "/quit", &Client::quitCmd });
@@ -23,7 +24,7 @@ Client::Client()
 	do {
 		getline(std::cin, command);
 
-		std::vector<std::string> tokens = Utility::tokenizer(command);
+		std::vector<std::string> tokens = Utilities::tokenizer(command);
 
 		if (tokens.size() >= 1)
 		{
@@ -76,4 +77,23 @@ void Client::connectCmd(Client *c, std::vector<std::string>)
 	{
 		std::cout << "Unnable connect to server!\n";
 	}
+}
+
+void Client::pingCmd(Client *c, std::vector<std::string>)
+{
+	c->network.send("PING");
+
+	
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		std::cout << buffor << std::endl;
+	}
+	else
+	{
+		std::cout << "Not response!" << std::endl;
+	}
+	
 }

@@ -1,7 +1,8 @@
-#include "Utility.h"
+#include "Utilities.h"
 
 
-std::vector<std::string> Utility::tokenizer(std::string line) {
+std::vector<std::string> Utilities::tokenizer(std::string line)
+{
 	std::vector<std::string> tokens;
 
 	std::stringstream stream(line);

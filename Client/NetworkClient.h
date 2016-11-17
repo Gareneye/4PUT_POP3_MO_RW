@@ -10,7 +10,7 @@ public:
 
 	bool connectToServer(char* address, char* port);
 	bool send(char*);
-	char* rec();
+	bool rec(std::string&);
 
 protected:
 	SOCKET ConnectSocket;

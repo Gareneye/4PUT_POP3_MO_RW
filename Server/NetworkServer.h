@@ -10,7 +10,7 @@ public:
 
 	void acceptClient();
 	bool send(char * data);
-	char* rec();
+	bool rec(std::string&);
 
 protected:
 	SOCKET ListenSocket;

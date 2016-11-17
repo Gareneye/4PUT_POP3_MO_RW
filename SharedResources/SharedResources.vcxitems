@@ -15,8 +15,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Network.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Utility.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Utility.h" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utilities.cpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Network.h" />

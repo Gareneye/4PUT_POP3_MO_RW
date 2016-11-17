@@ -2,12 +2,11 @@
 
 #include <map>
 #include <vector>
-#include <functional>
 #include <string>
 #include <iostream>
 
 #include "NetworkServer.h"
-#include "Utility.h"
+#include "Utilities.h"
 
 #define MOTD "== Welcome in POP3 Server ==\nServer is running on port 110\n\n"
 
@@ -21,8 +20,7 @@ public:
 	Server();
 	virtual ~Server();
 
-
-	//static void statCmd(Server*, std::vector<std::string>);
+	static void pingCmd(Server *, std::vector<std::string>);
 
 private:
 	NetworkServer network;

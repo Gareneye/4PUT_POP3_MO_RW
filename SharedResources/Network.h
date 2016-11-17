@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <exception>
 #include <string>
+#include <thread>
 
 #define DEFAULT_BUFLEN 512
 #define POP3_PORT "110"
@@ -22,6 +23,6 @@ protected:
 	addrinfo *result = NULL, *ptr = NULL, hints;
 
 	bool sendData(SOCKET, char*);
-	char* recData(SOCKET);
+	bool recData(SOCKET, std::string&);
 };
 

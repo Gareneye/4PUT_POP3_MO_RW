@@ -70,7 +70,7 @@ bool NetworkClient::send(char * data)
 	return sendData(ConnectSocket, data);
 }
 
-char * NetworkClient::rec()
+bool NetworkClient::rec(std::string& buffor)
 {
-	return recData(ConnectSocket);
+	return recData(ConnectSocket, buffor);
 }

@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "NetworkClient.h"
-#include "Utility.h"
+#include "Utilities.h"
 
 #define MOTD "== Welcome in POP3 Client ==\nClient is running\nType /help for more info\n"
 
@@ -27,6 +27,7 @@ public:
 	static void helpCmd(Client*, std::vector<std::string>);
 	static void quitCmd(Client*, std::vector<std::string>);
 	static void connectCmd(Client*, std::vector<std::string>);
+	static void pingCmd(Client*, std::vector<std::string>);
 
 private:
 	bool isWorking;
