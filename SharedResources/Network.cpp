@@ -18,7 +18,7 @@ Network::~Network()
 	WSACleanup();
 }
 
-bool Network::sendData(SOCKET socket, char* sendbuf)
+bool Network::sendData(SOCKET socket, const char* sendbuf)
 {
 	std::string buffor = sendbuf;
 	buffor.resize(DEFAULT_BUFLEN);
@@ -53,12 +53,12 @@ bool Network::recData(SOCKET socket, std::string& buffor)
 	else if (iResult == 0)
 	{
 		// connection closeing
-		printf("Connection closing...\n");
+		//printf("Connection closing...\n");
 		return false;
 	}
 	else
 	{
-		printf("recv failed with error: %d\n", WSAGetLastError());
+		//printf("recv failed with error: %d\n", WSAGetLastError());
 
 		// error
 		closesocket(socket);

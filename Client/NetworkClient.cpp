@@ -65,7 +65,7 @@ bool NetworkClient::connectToServer(char* address, char* port)
 	}
 }
 
-bool NetworkClient::send(char * data)
+bool NetworkClient::send(const char * data)
 {
 	return sendData(ConnectSocket, data);
 }

@@ -78,7 +78,7 @@ void NetworkServer::checkLocalAddress()
 	}
 }
 
-bool NetworkServer::send(char * data)
+bool NetworkServer::send(const char * data)
 {
 	return sendData(ClientSocket, data);
 }

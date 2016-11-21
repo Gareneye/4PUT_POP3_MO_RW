@@ -14,3 +14,19 @@ std::vector<std::string> Utilities::tokenizer(std::string line)
 
 	return tokens;
 }
+
+bool Utilities::getStatus(const std::string& line)
+{
+	std::string status = line.substr(0, 3);
+
+	if (status == "+OK")
+	{
+		return true;
+	}
+	else if (status == "-ERR")
+	{
+		return false;
+	}
+
+	return false;
+}

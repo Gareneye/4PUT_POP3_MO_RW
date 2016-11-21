@@ -9,7 +9,7 @@ public:
 	virtual ~NetworkClient();
 
 	bool connectToServer(char* address, char* port);
-	bool send(char*);
+	bool send(const char*);
 	bool rec(std::string&);
 
 protected:

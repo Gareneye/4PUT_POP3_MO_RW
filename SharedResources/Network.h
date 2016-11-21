@@ -22,7 +22,7 @@ protected:
 	WSADATA wsaData;
 	addrinfo *result = NULL, *ptr = NULL, hints;
 
-	bool sendData(SOCKET, char*);
+	bool sendData(SOCKET, const char*);
 	bool recData(SOCKET, std::string&);
 };
 
