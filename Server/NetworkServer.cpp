@@ -48,6 +48,10 @@ void NetworkServer::bindSocket()
 		WSACleanup();
 		throw NetworkException("bind failed with error");
 	}
+
+	const int size = 0;
+	setsockopt(ListenSocket, SOL_SOCKET, SO_SNDBUF, (const char *)&size, sizeof(int));
+	setsockopt(ListenSocket, SOL_SOCKET, SO_RCVBUF, (const char *)&size, sizeof(int));
 }
 
 void NetworkServer::listenSocket()
@@ -86,4 +90,18 @@ bool NetworkServer::send(const char * data)
 bool NetworkServer::rec(std::string& buffor)
 {
 	return recData(ClientSocket, buffor);
+}
+
+void NetworkServer::disconnectClient()
+{
+	closesocket(ClientSocket);
+	WSACleanup();
+}
+
+void NetworkServer::closeConnection()
+{
+	disconnectClient();
+
+	closesocket(ListenSocket);
+	WSACleanup();
 }

@@ -11,6 +11,7 @@ public:
 	bool connectToServer(char* address, char* port);
 	bool send(const char*);
 	bool rec(std::string&);
+	void disconnect();
 
 protected:
 	SOCKET ConnectSocket;

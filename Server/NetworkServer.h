@@ -12,6 +12,9 @@ public:
 	bool send(const char * data);
 	bool rec(std::string&);
 
+	void disconnectClient();
+	void closeConnection();
+
 protected:
 	SOCKET ListenSocket;
 	SOCKET ClientSocket;

@@ -61,6 +61,10 @@ bool NetworkClient::connectToServer(char* address, char* port)
 	}
 	else
 	{
+		const int size = 0;
+		setsockopt(ConnectSocket, SOL_SOCKET, SO_SNDBUF, (const char *)&size, sizeof(int));
+		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVBUF, (const char *)&size, sizeof(int));
+
 		return true;
 	}
 }
@@ -73,4 +77,10 @@ bool NetworkClient::send(const char * data)
 bool NetworkClient::rec(std::string& buffor)
 {
 	return recData(ConnectSocket, buffor);
+}
+
+void NetworkClient::disconnect()
+{
+	closesocket(ConnectSocket);
+	WSACleanup();
 }

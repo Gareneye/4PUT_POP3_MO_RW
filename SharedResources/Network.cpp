@@ -18,12 +18,22 @@ Network::~Network()
 	WSACleanup();
 }
 
+#include <iostream>
 bool Network::sendData(SOCKET socket, const char* sendbuf)
 {
 	std::string buffor = sendbuf;
-	buffor.resize(DEFAULT_BUFLEN);
+	bool fragment = false;
 
-	int iResult = send(socket, buffor.c_str(), DEFAULT_BUFLEN, 0);
+	if (buffor.length()+2 > DEFAULT_BUFLEN)
+	{
+		fragment = true;
+	}
+	else
+	{
+		buffor += "\r\n";
+	}
+	
+	int iResult = send(socket, buffor.c_str(), (fragment ? DEFAULT_BUFLEN : buffor.length()), 0);
 
 	if (iResult == SOCKET_ERROR) {
 		//throw NetworkException("send failed with error");
@@ -34,8 +44,14 @@ bool Network::sendData(SOCKET socket, const char* sendbuf)
 		return false;
 	}
 
+	if (fragment)
+	{
+		this->sendData(socket, buffor.substr(DEFAULT_BUFLEN).c_str());
+	}
+
 	return true;
 }
+
 
 bool Network::recData(SOCKET socket, std::string& buffor)
 {
@@ -47,7 +63,10 @@ bool Network::recData(SOCKET socket, std::string& buffor)
 	if (iResult > 0)
 	{
 		// success
-		buffor = recvbuf;
+		std::string test(recvbuf);
+		size_t pos = test.find_last_of("\r\n");
+		buffor = test.substr(0, pos);
+
 		return true;
 	}
 	else if (iResult == 0)
@@ -58,7 +77,7 @@ bool Network::recData(SOCKET socket, std::string& buffor)
 	}
 	else
 	{
-		//printf("recv failed with error: %d\n", WSAGetLastError());
+		printf("recv failed with error: %d\n", WSAGetLastError());
 
 		// error
 		closesocket(socket);

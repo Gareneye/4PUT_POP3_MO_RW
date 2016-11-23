@@ -21,19 +21,23 @@ class Client
 {
 public:
 	Client();
-	virtual ~Client();
+	virtual ~Client() {};
 
 	void disable();
 
 	static void userCmd(Client*, std::vector<std::string>);
 	static void helpCmd(Client*, std::vector<std::string>);
 	static void quitCmd(Client*, std::vector<std::string>);
+	static void noopCmd(Client*, std::vector<std::string>);
 	static void connectCmd(Client*, std::vector<std::string>);
 	static void passCmd(Client*, std::vector<std::string>);
 	static void listCmd(Client*, std::vector<std::string>);
-	//static void pingCmd(Client*, std::vector<std::string>);
+	static void statCmd(Client*, std::vector<std::string>);
+	static void retrCmd(Client*, std::vector<std::string>);
+	static void deleCmd(Client *, std::vector<std::string>);
+	static void rsetCmd(Client *, std::vector<std::string>);
 
-	enum Status { UNCONNECTED, AUTHORIZATION, TRANSACTION };
+	enum Status { AUTHORIZATION, TRANSACTION, UPDATE };
 
 private:
 	bool isWorking;

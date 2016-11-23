@@ -2,7 +2,8 @@
 
 Server::Server()
 {
-	status = UNCONNECTED;
+	// Delfault Authorization
+	status = AUTHORIZATION;
 
 	// MOTD
 	std::cout << MOTD;
@@ -11,15 +12,70 @@ Server::Server()
 	login = "test";
 	password = "test";
 
-	messages.push_back("Teraz nale¿y siê zalogowaæ u¿ywaj¹c poleceñ USER i PASS. W poni¿szym przyk³adzie (i wszystkich kolejnych) linie poprzedzone przez U: oznaczaj¹ to, co wpisujesz ty (u¿ytkownik), a linie poprzedzone przez S: oznaczaj¹ odpowiedzi serwera.");
-	messages.push_back("Drugaaaaaaa");
+	/*
+		std::string From;
+		std::string To;
+		std::string Date;
+		std::string Subject;
+		std::string Message;
+	*/
+
+	std::string path = "messages";
+	for (auto & p : fs::directory_iterator(path))
+	{
+		std::ostringstream file;
+		file << p;
+
+		std::string line;
+
+		std::ifstream msgFile(file.str());
+		if (msgFile.is_open())
+		{
+			Message msgObj;
+
+			msgObj.id = file.str();
+
+			getline(msgFile, line);
+			msgObj.From = line.substr(line.find("From:"));
+
+			getline(msgFile, line);
+			msgObj.To = line.substr(line.find("To:"));
+
+			getline(msgFile, line);
+			msgObj.Date = line.substr(line.find("Date:"));
+
+			getline(msgFile, line);
+			msgObj.Subject = line.substr(line.find("Subject:"));
+
+			std::string content;
+			while (getline(msgFile, line))
+			{
+				content += line;
+			}
+			msgObj.Msg = content;
+
+			messages.push_back(msgObj);
+
+			msgFile.close();
+		}
+		else
+		{
+			std::cout << "Unable to open file";
+		}
+	}
+
 
 	// Commands
 	std::map<std::string, Command> commands;
-	commands.insert({ "USER", &Server::userCmd });			// USER CMD
-	commands.insert({ "PASS", &Server::passCmd });			// USER CMD
-	commands.insert({ "LIST", &Server::listCmd });			// USER CMD
-	//commands.insert( { "PING", &Server::pingCmd } );
+	commands.insert({ "USER", &Server::userCmd });	
+	commands.insert({ "PASS", &Server::passCmd });
+	commands.insert({ "LIST", &Server::listCmd });
+	commands.insert({ "STAT", &Server::statCmd });			
+	commands.insert({ "RETR", &Server::retrCmd });
+	commands.insert({ "DELE", &Server::deleCmd });			
+	commands.insert({ "RSET", &Server::rsetCmd });
+	commands.insert({ "QUIT", &Server::quitCmd });
+	commands.insert({ "NOOP", &Server::noopCmd });
 
 	// Waiting for client
 	std::cout << "[Waiting for client...]" << std::endl;
@@ -58,13 +114,9 @@ Server::Server()
 }
 
 
-Server::~Server()
-{}
-
 void Server::greetingsCmd(Server *c, std::vector<std::string>)
 {
-	c->network.send("+OK POP3 Server ready!\r\n");
-	c->status = Server::AUTHORIZATION;
+	c->network.send("+OK POP3 Server ready!");
 }
 
 void Server::userCmd(Server *c, std::vector<std::string> v)
@@ -78,16 +130,12 @@ void Server::userCmd(Server *c, std::vector<std::string> v)
 
 	if (c->login == name)
 	{
-		std::string msg = "+OK " + name + " selected\r\n";
+		std::string msg = "+OK " + name + " selected";
 		c->network.send(msg.c_str());
-
-		#ifdef DEBUG
-		std::cout << "[User selected]" << std::endl;
-		#endif // DEBUG
 	}
 	else
 	{
-		c->network.send("-ERR User not selected\r\n");
+		c->network.send("-ERR User not selected");
 	}
 }
 
@@ -104,7 +152,7 @@ void Server::passCmd(Server *c, std::vector<std::string> v)
 	if (c->password == name)
 	{
 		c->status = Server::TRANSACTION;
-		std::string msg = "+OK Congratulations!\r\n";
+		std::string msg = "+OK Congratulations!";
 		c->network.send(msg.c_str());
 
 		#ifdef DEBUG
@@ -113,11 +161,7 @@ void Server::passCmd(Server *c, std::vector<std::string> v)
 	}
 	else
 	{
-		c->network.send("-ERR Wrong password\r\n");
-
-		#ifdef DEBUG
-		std::cout << "[Wrong password]" << std::endl;
-		#endif // DEBUG
+		c->network.send("-ERR Wrong password");
 	}
 }
 
@@ -130,47 +174,214 @@ void Server::listCmd(Server *c, std::vector<std::string>v)
 
 	if (v.size() < 2)
 	{
-		std::ostringstream temp;
-		temp << "+OK There are " << c->messages.size() << " messages\r\n";
-		c->network.send(temp.str().c_str());
 
-		for (int i = 0; i < c->messages.size(); i++)
+		// Count messages
+		int amount = 0;
+		for (auto i : c->messages)
 		{
-			std::ostringstream msg;
-			msg << i + 1 << " " << c->messages[i].size() << "\r\n";
-
-			c->network.send(msg.str().c_str());
+			if (!i.deleted) amount++;
 		}
 
-		c->network.send("\r\n.\r\n");
+		// Send success
+		std::string list = "+OK There are " + std::to_string(amount) + " messages";
+		c->network.send(list.c_str());
+
+		// Send all messages
+		std::string msg;
+		for (int i = 0; i < c->messages.size(); i++)
+		{
+			if (!c->messages[i].deleted)
+			{
+				msg = std::to_string(i + 1) + " " + std::to_string(c->messages[i].length());
+				c->network.send(msg.c_str());
+
+				msg.clear();
+			}
+		}
+
+		c->network.send("\r\n.");
 	}
 	else
 	{
+		// Index parse
 		int index;
 		std::istringstream iss(v[1]);
 		iss >> index;
 		index--;
 
-		if (index >= 0 && index < c->messages.size())
+		if (index < 0 && index >= c->messages.size())
 		{
-			std::ostringstream msg;
-			msg << index << " " << c->messages[index].size() << "\r\n";
-
-			c->network.send(msg.str().c_str());
+			c->network.send("-ERR no such message");
 		}
 		else
 		{
-			c->network.send("-ERR no such message");
+			// Is marked as deleted?
+			if (!c->messages[index].deleted)
+			{
+				std::string msg = "+OK " + std::to_string(index + 1) + " " + std::to_string(c->messages[index].length());
+				c->network.send(msg.c_str());
+			}
+			else
+			{
+				c->network.send("-ERR message is deleted");
+			}
 		}
 	}
 
 
 }
 
-
-/*
-void Server::pingCmd(Server* c, std::vector<std::string>)
+void Server::statCmd(Server *c, std::vector<std::string>v)
 {
-	c->network.send("PONG");
+	if (c->status != Server::TRANSACTION)
+	{
+		return;
+	}
+
+	int amount = 0;
+	int bytes = 0;
+
+	for (auto msg : c->messages)
+	{
+		if (!msg.deleted)
+		{
+			amount++;
+			bytes += msg.length();
+		}		
+	}
+
+	std::string text = "+OK " + std::to_string(amount) + ' ' + std::to_string(bytes);
+	c->network.send(text.c_str());
 }
-*/
+
+void Server::retrCmd(Server *c, std::vector<std::string>v)
+{
+	if (c->status != Server::TRANSACTION || v.size() < 2)
+	{
+		return;
+	}
+
+	// index parser
+	int index;
+	std::istringstream iss(v[1]);
+	iss >> index;
+	index--;
+
+	if (index < 0 && index >= c->messages.size())
+	{
+		c->network.send("-ERR Message not exists");
+	}
+	else
+	{
+		if (c->messages[index].deleted)
+		{
+			c->network.send("-ERR Message is deleted");
+		}
+		else
+		{
+			std::string text = "+OK " + std::to_string(c->messages[index].length());
+			c->network.send(text.c_str());
+			c->network.send(c->messages[index].content().c_str());
+
+			c->network.send("\r\n.");
+		}
+	}
+
+}
+
+void Server::deleCmd(Server *c, std::vector<std::string>v)
+{
+	if (c->status != Server::TRANSACTION || v.size() < 2)
+	{
+		return;
+	}
+
+	// parse index
+	int index;
+	std::istringstream iss(v[1]);
+	iss >> index;
+	index--;
+
+	// Is message exist
+	if (index < 0 && index >= c->messages.size())
+	{
+		c->network.send("-ERR no such message");
+	}
+	else
+	{
+		c->messages[index].deleted = true;
+		c->network.send("+OK message deleted");
+	}
+}
+
+void Server::rsetCmd(Server *c, std::vector<std::string>v)
+{
+	if (c->status != Server::TRANSACTION)
+	{
+		return;
+	}
+
+	int size = 0;
+	int amount = 0;
+
+	for (auto &i : c->messages)
+	{
+		if (i.deleted)
+		{
+			size += i.length();
+			amount++;
+			i.deleted = false;
+		}
+	}
+
+	if (amount == 0)
+	{
+		c->network.send("+OK there's no messages marked as deleted");
+	}
+	else
+	{
+		std::string msg = "+OK maildrop has new " + std::to_string(amount) + " messages (" + std::to_string(size) + " octets)";
+		c->network.send(msg.c_str());
+	}
+
+}
+
+void Server::quitCmd(Server *c, std::vector<std::string>v)
+{
+	if (c->status == Server::TRANSACTION)
+	{
+		c->status = Server::UPDATE;
+	}
+
+	int amount = 0;
+
+	for (auto it = c->messages.begin(); it != c->messages.end();)
+	{
+		if ((*it).deleted)
+		{
+			amount++;
+			std::remove((*it).id.c_str());
+			it = c->messages.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	std::string msg = "+OK OP3 server signing off (" + std::to_string(amount) + " messages left)";
+	c->network.send(msg.c_str());
+
+	// close connection
+	c->network.closeConnection();
+}
+
+void Server::noopCmd(Server *c, std::vector<std::string>v)
+{
+	if (c->status != Server::TRANSACTION)
+	{
+		return;
+	}
+
+	c->network.send("+OK");
+}

@@ -5,7 +5,7 @@
 Client::Client()
 {
 	// Init
-	status = UNCONNECTED;
+	status = AUTHORIZATION;
 	isWorking = true;
 
 	// MOTD
@@ -15,15 +15,20 @@ Client::Client()
 	std::map<std::string, Command> commands;
 	commands.insert({ "/connect", &Client::connectCmd });
 	commands.insert({ "/help", &Client::helpCmd });
+
+	// FROM RFC
 	commands.insert({ "/user", &Client::userCmd });
 	commands.insert({ "/pass", &Client::passCmd });
 	commands.insert({ "/list", &Client::listCmd });
-
-	//commands.insert({ "/ping", &Client::pingCmd });
+	commands.insert({ "/stat", &Client::statCmd });
+	commands.insert({ "/retr", &Client::retrCmd });
+	commands.insert({ "/dele", &Client::deleCmd });
+	commands.insert({ "/rset", &Client::rsetCmd });
+	commands.insert({ "/quit", &Client::quitCmd });
+	commands.insert({ "/noop", &Client::noopCmd });
 
 	// Command
 	std::string command;
-
 	do {
 		getline(std::cin, command);
 
@@ -41,8 +46,6 @@ Client::Client()
 	} while (isWorking);
 }
 
-Client::~Client()
-{}
 
 void Client::disable()
 {
@@ -92,31 +95,23 @@ void Client::helpCmd(Client *c, std::vector<std::string>)
 		case Client::AUTHORIZATION:
 		{
 			std::cout << "You are now in AUTHORIZATION state.";
+			std::cout <<
+				"\n \t [cmd] \t\t [desc] \n" <<
+				"\t /connect \t for create connection with the server \n" <<
+				"\n";
 			break;
 		}
 
 		case Client::TRANSACTION:
 		{
 			std::cout << "You are now in TRANSACTION state.";
-			break;
-		}
-
-		default: 
-		{
-			std::cout << "You are now disconected. Use: \n";
-
 			std::cout <<
 				"\n \t [cmd] \t\t [desc] \n" <<
 				"\t /connect \t for create connection with the server \n" <<
 				"\n";
+			break;
 		}
-
 	}
-}
-
-void Client::quitCmd(Client *c, std::vector<std::string>)
-{
-	c->disable();
 }
 
 void Client::connectCmd(Client *c, std::vector<std::string>)
@@ -135,7 +130,6 @@ void Client::connectCmd(Client *c, std::vector<std::string>)
 		
 		if (Utilities::getStatus(buffor))
 		{
-			c->status = Client::AUTHORIZATION;
 			std::cout << "[Connected with server successful!]" << std::endl;
 		}
 		else
@@ -199,17 +193,11 @@ void Client::listCmd(Client *c, std::vector<std::string>v)
 
 		// Rec
 		std::string buffor;
-		bool response = true;
-		response = c->network.rec(buffor);
+		bool response = c->network.rec(buffor);
 
 		#ifdef DEBUG
 		std::cout << buffor << std::endl;
 		#endif // DEBUG
-
-		if (Utilities::getStatus(buffor))
-		{
-		}
-
 	}
 	else
 	{
@@ -217,8 +205,7 @@ void Client::listCmd(Client *c, std::vector<std::string>v)
 
 		// Rec
 		std::string buffor;
-		bool response = true;
-		response = c->network.rec(buffor);
+		bool response = c->network.rec(buffor);
 
 		#ifdef DEBUG
 		std::cout << buffor << std::endl;
@@ -241,28 +228,196 @@ void Client::listCmd(Client *c, std::vector<std::string>v)
 					std::cout << "[Unable connect with server...]" << std::endl;
 				}
 
-			} while (buffor != "\r\n.\r\n");
+			} while (buffor.find("\r\n.") == std::string::npos);
 		}
 	}
 }
 
-/*
-void Client::pingCmd(Client *c, std::vector<std::string>)
+void Client::statCmd(Client *c, std::vector<std::string>v)
 {
-	c->network.send("PING");
+	if (c->status != Client::TRANSACTION)
+	{
+		return;
+	}
 
-	
+	c->network.send("STAT");
+
+	// Rec
 	std::string buffor;
 	bool response = c->network.rec(buffor);
 
 	if (response)
 	{
+		#ifdef DEBUG
 		std::cout << buffor << std::endl;
+		#endif // DEBUG
+
+		if (Utilities::getStatus(buffor))
+		{
+
+		}
+		else
+		{
+
+		}
 	}
-	else
-	{
-		std::cout << "Not response!" << std::endl;
-	}
-	
 }
-*/
+
+void Client::retrCmd(Client *c, std::vector<std::string>v)
+{
+	if (c->status != Client::TRANSACTION || v.size() < 2)
+	{
+		return;
+	}
+
+	int index;
+	std::istringstream iss(v[1]);
+	iss >> index;
+
+	std::string command = "RETR " + std::to_string(index);
+	c->network.send(command.c_str());
+
+	// Rec
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		#ifdef DEBUG
+		std::cout << buffor << std::endl;
+		#endif // DEBUG
+
+		if (Utilities::getStatus(buffor))
+		{
+
+			do {
+				response = c->network.rec(buffor);
+
+				if (response)
+				{
+					#ifdef DEBUG
+					std::cout << buffor << std::endl;
+					#endif // DEBUG
+				}
+				else
+				{
+					std::cout << "[Unable connect with server...]" << std::endl;
+				}
+
+			} while (buffor.find("\r\n.") == std::string::npos);
+		}
+	}
+
+}
+
+void Client::deleCmd(Client *c, std::vector<std::string>v)
+{
+	if (c->status != Client::TRANSACTION || v.size() < 2)
+	{
+		return;
+	}
+
+	int index;
+	std::istringstream iss(v[1]);
+	iss >> index;
+
+	std::string command = "DELE " + std::to_string(index);
+	c->network.send(command.c_str());
+
+	// Rec
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		#ifdef DEBUG
+		std::cout << buffor << std::endl;
+		#endif // DEBUG
+
+		if (Utilities::getStatus(buffor))
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+
+}
+
+void Client::rsetCmd(Client *c, std::vector<std::string>v)
+{
+	if (c->status != Client::TRANSACTION)
+	{
+		return;
+	}
+
+
+	c->network.send("RSET");
+
+	// Rec
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		#ifdef DEBUG
+		std::cout << buffor << std::endl;
+		#endif // DEBUG
+
+		if (Utilities::getStatus(buffor))
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+
+}
+
+void Client::quitCmd(Client *c, std::vector<std::string>v)
+{
+	if (c->status == Client::TRANSACTION)
+	{
+		c->status = Client::UPDATE;
+	}
+
+	c->network.send("QUIT");
+
+	// Rec
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		#ifdef DEBUG
+		std::cout << buffor << std::endl;
+		#endif // DEBUG
+	}
+
+	// close connection
+}
+
+void Client::noopCmd(Client *c, std::vector<std::string>v)
+{
+	if (c->status != Client::TRANSACTION)
+	{
+		return;
+	}
+
+	c->network.send("NOOP");
+
+	// Rec
+	std::string buffor;
+	bool response = c->network.rec(buffor);
+
+	if (response)
+	{
+		#ifdef DEBUG
+		std::cout << buffor << std::endl;
+		#endif // DEBUG
+	}
+}
